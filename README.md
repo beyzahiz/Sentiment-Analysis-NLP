@@ -95,6 +95,14 @@ Hugging Face `Transformers` kütüphanesi kullanılarak `bert-base-uncased` mode
 
 Proje kapsamında eğitilen tüm modellerin başarı oranları aşağıda karşılaştırılmıştır. Modern Transformer mimarilerinin (BERT) klasik ve LSTM tabanlı yöntemlere üstünlüğü net bir şekilde gözlenmektedir.
 
+### Model Başarı Karşılaştırması
+
+| Model | Doğruluk (Accuracy) |
+| :--- | :---: |
+| Lojistik Regresyon (TF-IDF) | 0.887 |
+| Bi-LSTM (GloVe) | 0.881 |
+| **BERT (Fine-tuned)** | **0.924** |
+
 ![Model Performance Comparison](model_comparison.png)
 
 ---
