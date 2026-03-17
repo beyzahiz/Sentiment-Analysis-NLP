@@ -1,4 +1,4 @@
-# 🎬 Movie Sentiment Analysis: From Classical ML to BERT
+# 🎬 Movie Sentiment Analysis: From Classical ML to BERT 
 
 ![Python](https://img.shields.io/badge/Python-3.12-blue.svg)
 ![PyTorch](https://img.shields.io/badge/PyTorch-Deep%20Learning-red.svg)
