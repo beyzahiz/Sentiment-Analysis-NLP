@@ -6,7 +6,7 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 app = FastAPI()
 
-model_path = "/Users/beyzahiz/Desktop/Sentiment-Analysis-NLP/sentiment_model"
+model_path = "./sentiment_model"
 
 tokenizer = AutoTokenizer.from_pretrained(model_path)
 model = AutoModelForSequenceClassification.from_pretrained(model_path)
