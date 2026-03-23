@@ -3,13 +3,12 @@ import requests
 
 st.title("Sentiment Analysis App")
 
-text = st.text_area("Enter a movie review")
+text = st.text_area("Enter a movie review: ")
 
-if st.button("Predict Sentiment"):
-
+if st.button("Analyze"):
     response = requests.post(
-        "http://127.0.0.1:8000/predict",
-        json={"text": text}
+        "http://api:8000/predict", 
+        json={"text": user_input}
     )
 
     result = response.json()
