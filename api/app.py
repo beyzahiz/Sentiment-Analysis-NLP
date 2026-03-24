@@ -6,27 +6,26 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 app = FastAPI()
 
-# Docker içindeki tam yolu (absolute path) kullanmak her zaman daha güvenlidir
-# app.py api klasörünün içindeyse, sentiment_model de aynı yerdedir.
+# --- MODEL YÜKLEME BÖLÜMÜ ---
+# Mevcut dosyanın (app.py) bulunduğu tam dizini alıyoruz
 current_dir = os.path.dirname(os.path.abspath(__file__))
+# Model klasörünün tam yolunu oluşturuyoruz
 model_path = os.path.join(current_dir, "sentiment_model")
 
-# Modelin yüklenip yüklenmediğini kontrol etmek için bir log
-print(f"Model yükleniyor: {model_path}")
+print(f"Model aranıyor: {model_path}")
 
-try:
-    tokenizer = AutoTokenizer.from_pretrained(model_path)
-    model = AutoModelForSequenceClassification.from_pretrained(model_path)
-    print("Model başarıyla yüklendi!")
-except Exception as e:
-    print(f"Model yükleme hatası: {e}")
+# Tokenizer ve Modeli yüklüyoruz
+# local_files_only=True parametresi, internete bakmamasını, sadece klasöre bakmasını sağlar
+tokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True)
+model = AutoModelForSequenceClassification.from_pretrained(model_path, local_files_only=True)
+# ----------------------------
 
 class TextRequest(BaseModel):
     text: str
 
-@app.get("/") # Render'ın sağlıklı olduğunu anlaması için bir ana sayfa
-def read_root():
-    return {"status": "API is running"}
+@app.get("/")
+def health_check():
+    return {"status": "API is alive!"}
 
 @app.post("/predict")
 def predict_sentiment(request: TextRequest):
@@ -37,7 +36,8 @@ def predict_sentiment(request: TextRequest):
         padding=True,
         max_length=256
     )
-    with torch.no_grad(): # Tahmin yaparken hafızayı yormayalım
+    
+    with torch.no_grad():
         outputs = model(**inputs)
     
     probs = torch.nn.functional.softmax(outputs.logits, dim=1)
