@@ -6,34 +6,38 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 app = FastAPI()
 
-# Global değişkenler (başlangıçta boş)
+# Global değişkenler
 tokenizer = None
 model = None
 
 def load_model():
-    """Modeli sadece ihtiyaç duyulduğunda yükleyen fonksiyon (Lazy Loading)"""
     global tokenizer, model
     if tokenizer is None or model is None:
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        model_path = os.path.join(current_dir, "sentiment_model")
+        # Docker konteyner yapısına göre lokal yolu en sade haliyle veriyoruz
+        # transformers kütüphanesi './klasor_adi' formatını gördüğünde lokal olduğunu anlar.
+        model_path = "./sentiment_model"
+        
         print(f"🔄 Model yükleniyor: {model_path}...")
         
-        tokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True)
-        model = AutoModelForSequenceClassification.from_pretrained(model_path, local_files_only=True)
-        print("✅ Model başarıyla belleğe alındı!")
+        try:
+            # local_files_only=True ve trust_remote_code=False güvenliği artırır
+            tokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True)
+            model = AutoModelForSequenceClassification.from_pretrained(model_path, local_files_only=True)
+            print("✅ Model başarıyla belleğe alındı!")
+        except Exception as e:
+            print(f"❌ KRİTİK HATA: Model yüklenirken klasör bulunamadı: {e}")
+            raise e
 
 class TextRequest(BaseModel):
     text: str
 
 @app.get("/")
 def health_check():
-    # Sunucu anında cevap verecek, Render "Live" diyecek
     return {"status": "API is alive", "model_loaded": model is not None}
 
 @app.post("/predict")
 def predict_sentiment(request: TextRequest):
-    # Tahmin isteği geldiğinde model yüklü değilse yükle
-    load_model()
+    load_model() # İlk istekte yüklemeyi tetikler
     
     inputs = tokenizer(
         request.text,
