@@ -1,40 +1,40 @@
 import os
+import torch
 from fastapi import FastAPI
 from pydantic import BaseModel
-import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 app = FastAPI()
 
-# Render/Docker için en sağlam yol belirleme yöntemi
-current_dir = os.path.dirname(os.path.abspath(__file__))
-# Klasör yolunun sonuna '/' eklemek, kütüphaneye bunun bir repo değil dizin olduğunu anlatır.
-model_path = os.path.join(current_dir, "sentiment_model") + os.sep
+# Global değişkenler (başlangıçta boş)
+tokenizer = None
+model = None
 
-print(f"Model aranıyor: {model_path}")
-
-try:
-    # 'local_files_only=True' internete gitmesini engeller.
-    # 'model_path' artık tam yol (absolute path) olarak besleniyor.
-    tokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True)
-    model = AutoModelForSequenceClassification.from_pretrained(model_path, local_files_only=True)
-    print("✅ BAŞARILI: Model ve Tokenizer yüklendi.")
-except Exception as e:
-    print(f"❌ HATA: Model yüklenemedi. Detay: {e}")
+def load_model():
+    """Modeli sadece ihtiyaç duyulduğunda yükleyen fonksiyon (Lazy Loading)"""
+    global tokenizer, model
+    if tokenizer is None or model is None:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        model_path = os.path.join(current_dir, "sentiment_model")
+        print(f"🔄 Model yükleniyor: {model_path}...")
+        
+        tokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True)
+        model = AutoModelForSequenceClassification.from_pretrained(model_path, local_files_only=True)
+        print("✅ Model başarıyla belleğe alındı!")
 
 class TextRequest(BaseModel):
     text: str
 
 @app.get("/")
 def health_check():
-    return {"status": "API is alive!"}
+    # Sunucu anında cevap verecek, Render "Live" diyecek
+    return {"status": "API is alive", "model_loaded": model is not None}
 
 @app.post("/predict")
 def predict_sentiment(request: TextRequest):
-    # Model yüklenemediyse hata dönmesi için kontrol (Safe-guard)
-    if 'tokenizer' not in globals() or 'model' not in globals():
-        return {"error": "Model is not loaded on the server."}
-
+    # Tahmin isteği geldiğinde model yüklü değilse yükle
+    load_model()
+    
     inputs = tokenizer(
         request.text,
         return_tensors="pt",
