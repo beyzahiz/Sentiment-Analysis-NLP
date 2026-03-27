@@ -13,26 +13,31 @@ model = None
 def load_model():
     global tokenizer, model
     if tokenizer is None or model is None:
-        # 1. Adım: app.py'nin olduğu tam klasörü bul
-        base_path = Path(__file__).parent.resolve()
-        # 2. Adım: Model klasörünün tam yolunu Path objesi olarak oluştur
+        # app.py neredeyse orayı baz al
+        current_file_path = Path(__file__).resolve()
+        base_path = current_file_path.parent
+        
+        # Önce aynı klasörde ara, bulamazsan bir üst klasörde ara
         model_path = base_path / "sentiment_model"
         
-        # Logda tam yolu görelim ki emin olalım
-        print(f"🔄 Model yükleniyor (Tam Yol): {model_path}")
-        
-        # Klasör var mı kontrol edelim (Loglarda görürüz)
         if not model_path.exists():
-            print(f"❌ HATA: {model_path} dizini bulunamadı!")
+            model_path = base_path.parent / "sentiment_model"
+
+        print(f"🔄 Model aranıyor: {model_path}")
+
+        if not model_path.exists():
+            print(f"❌ KRİTİK HATA: sentiment_model klasörü hiçbir yerde bulunamadı!")
+            # Dosya yapısını loglara basalım ki sorunu kökten görelim
+            print(f"Mevcut dizin içeriği: {os.listdir(base_path)}")
             return
 
         try:
-            # Path objesini doğrudan veriyoruz, Transformers bunu lokal dizin olarak tanır
-            tokenizer = AutoTokenizer.from_pretrained(str(model_path.absolute()), local_files_only=True)
-            model = AutoModelForSequenceClassification.from_pretrained(str(model_path.absolute()), local_files_only=True)
-            print("✅ Model başarıyla belleğe alındı!")
+            print(f"✅ Model bulundu, yükleniyor: {model_path}")
+            tokenizer = AutoTokenizer.from_pretrained(str(model_path), local_files_only=True)
+            model = AutoModelForSequenceClassification.from_pretrained(str(model_path), local_files_only=True)
+            print("✨ TEBRİKLER: Model ve Tokenizer başarıyla yüklendi!")
         except Exception as e:
-            print(f"❌ KRİTİK HATA: Yükleme sırasında sorun çıktı: {e}")
+            print(f"❌ Yükleme hatası: {e}")
             raise e
 
 class TextRequest(BaseModel):
