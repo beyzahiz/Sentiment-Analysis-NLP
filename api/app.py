@@ -13,19 +13,16 @@ model = None
 def load_model():
     global tokenizer, model
     if tokenizer is None or model is None:
-        # 1. Adım: app.py'nin olduğu klasörün tam adresini al
-        base_path = os.path.dirname(os.path.abspath(__file__))
-        
-        # 2. Adım: Model klasörünün tam (absolute) adresini oluştur
-        # Bu işlem '/app/sentiment_model' gibi net bir adres üretir
-        model_path = os.path.abspath(os.path.join(base_path, "sentiment_model"))
+        # Docker içinde '/app/sentiment_model' gibi bir tam yol oluşturur
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        model_path = os.path.join(current_dir, "sentiment_model")
         
         print(f"🔄 Model yükleniyor: {model_path}...")
         
         try:
-            # Hugging Face'e 'bu bir klasördür' demek için path'i stringe çeviriyoruz
-            tokenizer = AutoTokenizer.from_pretrained(str(model_path), local_files_only=True)
-            model = AutoModelForSequenceClassification.from_pretrained(str(model_path), local_files_only=True)
+            # local_files_only=True ile internete bakmasını tamamen kapatıyoruz
+            tokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True)
+            model = AutoModelForSequenceClassification.from_pretrained(model_path, local_files_only=True)
             print("✅ Model başarıyla belleğe alındı!")
         except Exception as e:
             print(f"❌ KRİTİK HATA: Model yüklenirken klasör bulunamadı: {e}")
@@ -40,7 +37,7 @@ def health_check():
 
 @app.post("/predict")
 def predict_sentiment(request: TextRequest):
-    load_model() # İlk istekte yüklemeyi tetikler
+    load_model() # İlk istek geldiğinde yüklemeyi başlatır
     
     inputs = tokenizer(
         request.text,
