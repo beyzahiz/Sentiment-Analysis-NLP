@@ -13,16 +13,19 @@ model = None
 def load_model():
     global tokenizer, model
     if tokenizer is None or model is None:
-        # Docker konteyner yapısına göre lokal yolu en sade haliyle veriyoruz
-        # transformers kütüphanesi './klasor_adi' formatını gördüğünde lokal olduğunu anlar.
-        model_path = "./sentiment_model"
+        # 1. Adım: app.py'nin olduğu klasörün tam adresini al
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        
+        # 2. Adım: Model klasörünün tam (absolute) adresini oluştur
+        # Bu işlem '/app/sentiment_model' gibi net bir adres üretir
+        model_path = os.path.abspath(os.path.join(base_path, "sentiment_model"))
         
         print(f"🔄 Model yükleniyor: {model_path}...")
         
         try:
-            # local_files_only=True ve trust_remote_code=False güvenliği artırır
-            tokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True)
-            model = AutoModelForSequenceClassification.from_pretrained(model_path, local_files_only=True)
+            # Hugging Face'e 'bu bir klasördür' demek için path'i stringe çeviriyoruz
+            tokenizer = AutoTokenizer.from_pretrained(str(model_path), local_files_only=True)
+            model = AutoModelForSequenceClassification.from_pretrained(str(model_path), local_files_only=True)
             print("✅ Model başarıyla belleğe alındı!")
         except Exception as e:
             print(f"❌ KRİTİK HATA: Model yüklenirken klasör bulunamadı: {e}")
