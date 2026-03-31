@@ -4,10 +4,8 @@ import os
 
 st.title("Sentiment Analysis App")
 
-# DOĞRU KULLANIM:
-# İlk parametre Render'daki 'Key' ismi olmalı. 
-# Eğer o isimde bir değişken bulamazsa ikinci parametreyi (localhost) kullanır.
-API_URL = os.getenv("API_URL", "https://sentiment-analysis-nlp-jt8o.onrender.com")
+
+API_URL = "https://beyzahiz-sentiment-analysis-api.hf.space/predict"
 
 text = st.text_area("Yorumunuzu girin:")
 
