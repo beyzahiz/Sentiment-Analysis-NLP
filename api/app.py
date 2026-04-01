@@ -8,7 +8,7 @@ app = FastAPI()
 
 tokenizer = None
 model = None
-MODEL_NAME = "distilbert-base-uncased-finetuned-sst-2-english" 
+MODEL_NAME = "nlptown/bert-base-multilingual-uncased-sentiment"
 
 def load_model():
     global tokenizer, model
@@ -31,7 +31,18 @@ def predict_sentiment(request: TextRequest):
     inputs = tokenizer(request.text, return_tensors="pt", truncation=True, padding=True, max_length=128)
     with torch.no_grad():
         outputs = model(**inputs)
-    probs = torch.nn.functional.softmax(outputs.logits, dim=1)
-    prediction = torch.argmax(probs).item()
-    sentiment = "positive" if prediction == 1 else "negative"
+    
+    # Bu model 5 sınıflı (1-5 yıldız) çıktı verir.
+    # 1-2 yıldız: Negative, 3: Neutral, 4-5: Positive
+    logits = outputs.logits
+    prediction = torch.argmax(logits, dim=1).item()
+    
+    # Karar mantığı (Mapping)
+    if prediction <= 1: # 0 ve 1 (1 ve 2 yıldız)
+        sentiment = "negative"
+    elif prediction == 2: # 2 (3 yıldız)
+        sentiment = "neutral" # İstersen bunu da 'negative' yapabilirsin
+    else: # 3 ve 4 (4 ve 5 yıldız)
+        sentiment = "positive"
+        
     return {"sentiment": sentiment}

@@ -45,9 +45,12 @@ if st.button("Duyguyu Analiz Et 🚀"):
                     st.balloons() # KONFETİ! 🎉
                     st.success(f"### Sonuç: Pozitif ")
                     st.info("Model bu metinde iyimser ve yapıcı bir ton saptadı.")
+                elif sentiment == "neutral":
+                    st.warning("### Sonuç: Nötr 😐")
+                    st.info("Model bu metinde dengeli veya tarafsız bir ton saptadı.")
                 else:
-                    st.error(f"### Sonuç: Negatif ")
-                    st.warning("Model bu metinde eleştirel veya olumsuz bir ton saptadı.")
+                    st.error("### Sonuç: Negatif 😡")
+                    st.warning("Model bu metinde eleştirel bir ton saptadı.")
             else:
                 st.error(f"API Hatası: {response.status_code}")
         except Exception as e:
