@@ -32,17 +32,18 @@ def predict_sentiment(request: TextRequest):
     with torch.no_grad():
         outputs = model(**inputs)
     
-    # Bu model 5 sınıflı (1-5 yıldız) çıktı verir.
-    # 1-2 yıldız: Negative, 3: Neutral, 4-5: Positive
     logits = outputs.logits
     prediction = torch.argmax(logits, dim=1).item()
     
-    # Karar mantığı (Mapping)
-    if prediction <= 1: # 0 ve 1 (1 ve 2 yıldız)
+    # 0 -> 1 Yıldız (Çok Negatif)
+    # 1 -> 2 Yıldız (Negatif)
+    # 2 -> 3 Yıldız (Nötr)
+    # 3 -> 4 Yıldız (Pozitif)
+    # 4 -> 5 Yıldız (Çok Pozitif)
+    
+    if prediction <= 1: 
         sentiment = "negative"
-    elif prediction == 2: # 2 (3 yıldız)
-        sentiment = "neutral" # İstersen bunu da 'negative' yapabilirsin
-    else: # 3 ve 4 (4 ve 5 yıldız)
+    elif prediction == 2:
+        sentiment = "neutral"
+    else:
         sentiment = "positive"
-        
-    return {"sentiment": sentiment}
