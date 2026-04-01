@@ -3,28 +3,50 @@
 ![Python](https://img.shields.io/badge/Python-3.12-blue.svg)
 ![PyTorch](https://img.shields.io/badge/PyTorch-Deep%20Learning-red.svg)
 ![TensorFlow](https://img.shields.io/badge/TensorFlow-2.19-orange.svg)
+![Docker](https://img.shields.io/badge/Docker-Containerization-blue.svg)
 ![Transformers](https://img.shields.io/badge/%F0%9F%A4%97%20Transformers-BERT-yellow.svg)
 ![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688.svg)
 ![Streamlit](https://img.shields.io/badge/Streamlit-UI-FF4B4B.svg)
 
-Bu proje, 50.000 IMDB film yorumu üzerinde duygu analizi (sentiment analysis) gerçekleştirmek amacıyla geliştirilmiştir. Geleneksel Makine Öğrenmesi yöntemlerinden modern Transformer mimarilerine uzanan geniş bir yelpazede model karşılaştırmaları içerir ve eğitilen en iyi modelin **FastAPI** & **Streamlit** ile uçtan uca canlıya alınmasını kapsar. 
+Bu proje, 50.000 IMDB film yorumu üzerinde duygu analizi gerçekleştirmek amacıyla geliştirilmiştir. Geleneksel Makine Öğrenmesi yöntemlerinden modern Transformer mimarilerine uzanan model karşılaştırmalarını ve bu modellerin **Microservice** mimarisiyle canlıya alınmasını kapsar.
+
+---
+
+## 🚀 Canlı Demo (Live Demo)
+Uygulamayı tarayıcınızda test edin:  
+👉 **[Sentify: AI Duygu Analizi](https://sentiment-app-3lai.onrender.com/)**
 
 ---
 
 ## 📌 Proje Genel Bakış 
 
-Bu proje, film yorumları üzerinde **duygu analizi (sentiment analysis)** yapmak için klasik makine öğrenmesi yöntemlerinden modern transformer mimarilerine kadar uzanan farklı yaklaşımları keşfeder.
+Bu proje, film yorumları üzerinde **duygu analizi (sentiment analysis)** yapmak için klasik makine öğrenmesi yöntemlerinden modern transformer mimarilerine kadar uzanan farklı yaklaşımları keşfeder. Bir NLP modelinin sadece eğitilmesini değil, gerçek dünya kısıtları (RAM, CPU, Latency) altında nasıl servis edileceğini (Model Serving) odak noktasına alır.
 
-Temel amaç, farklı Doğal Dil İşleme (NLP) modellerinin performansını karşılaştırmak ve en iyi sonuç veren modeli **FastAPI** ve **Streamlit** kullanarak gerçek zamanlı bir tahmin servisi olarak yayına almaktır.
+**Öne Çıkan Mühendislik Adımları:**
+- **BERT Fine-tuning:** Hugging Face `bert-base-uncased` modeli ile %92.4 doğruluk.
+- **Microservice Architecture:** Frontend ve Backend birimlerinin birbirinden bağımsız ölçeklenmesi.
+- **Containerization:** Tüm sistemin Dockerize edilerek ortam bağımsız hale getirilmesi.
+- **Resource Optimization:** Kısıtlı bulut kaynaklarında (512MB RAM) büyük modelleri çalıştırmak için mimari çözümler.
 
-**Öne Çıkanlar:**
-- Kapsamlı NLP ön işleme hattı (Normalizasyon, Temizleme, Tokenization)
-- TF-IDF + Lojistik Regresyon (Baseline model)
-- Önceden eğitilmiş GloVe kelime gömme (embeddings) ile Bi-LSTM mimarisi
-- Hugging Face Transformers kütüphanesi ile BERT Fine-tuning
-- FastAPI ile modelin servis edilmesi (Deployment)
-- Streamlit ile etkileşimli web arayüzü
+---
 
+## 🧠 Dağıtık Sistem Mimarisi (Architecture)
+
+Proje, yüksek bellek gereksinimi duyan derin öğrenme modellerini optimize etmek amacıyla **Distributed (Dağıtık)** bir yapıda kurgulanmıştır:
+
+1.  **Frontend (UI):** Render üzerinde koşan **Streamlit** uygulaması. Kullanıcı dostu arayüz ve asenkron API istek yönetimi sağlar.
+2.  **Backend (API):** Hugging Face Spaces üzerinde **Docker** konteynerında koşan **FastAPI**. 16GB RAM desteği ile BERT modelini saniyeler içinde yükler ve tahmin üretir.
+3.  **Model Serving:** Model, API tarafında "Lazy Loading" stratejisiyle yüklenerek sunucu başlangıç hızı optimize edilmiştir.
+
+```mermaid
+graph LR
+A[Kullanıcı] --> B[Streamlit UI - Render]
+B -- JSON Post --> C[FastAPI - HF Spaces]
+C -- Inference --> D[DistilBERT Model]
+D -- Sentiment Result --> C
+C -- Response --> B
+B -- Visual Output --> A
+```
 ---
 
 ## 📚 Veri Seti
@@ -186,4 +208,11 @@ streamlit run streamlit_app.py
 ```bash
 http://localhost:8501
 ```
+
+---
+
+## 🛠️ Teknik Zorluklar ve Çözümler (Engineering Insights)
+**Bellek Yönetimi (RAM Management):** Ücretsiz bulut servislerindeki 512MB RAM limiti, 1.2GB'lık standart BERT modelleri için yetersiz kalmıştır.
+
+**Çözüm:** Model, distilbert-base-uncased-finetuned-sst-2-english (DistilBERT) versiyonuna optimize edilmiş ve ağırlıklar low_cpu_mem_usage parametresiyle yüklenmiştir. Backend ünitesi, yüksek kapasiteli RAM sunan Hugging Face Spaces'e taşınarak sistem stabilitesi sağlanmıştır.
 
