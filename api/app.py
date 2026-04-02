@@ -3,7 +3,7 @@ import torch
 from fastapi import FastAPI
 from pydantic import BaseModel
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
-from googletrans import Translator # Çeviri için 
+from googletrans import Translator
 
 app = FastAPI()
 translator = Translator()
@@ -11,7 +11,7 @@ translator = Translator()
 tokenizer = None
 model = None
 
-MODEL_NAME = "distilbert-base-uncased-finetuned-sst-2-english" 
+MODEL_NAME = "cardiffnlp/twitter-roberta-base-sentiment"
 
 def load_model():
     global tokenizer, model
@@ -26,24 +26,21 @@ class TextRequest(BaseModel):
 def predict_sentiment(request: TextRequest):
     load_model()
     
-    # Eğer metin Türkçe ise İngilizceye çevir 
+    # Çeviri Katmanı
     try:
         translated = translator.translate(request.text, dest='en').text
     except:
-        translated = request.text # Çeviri patlarsa orijinaliyle devam et
+        translated = request.text
         
-    # İngilizce model ile analiz et
+    # RoBERTa ile Analiz
     inputs = tokenizer(translated, return_tensors="pt", truncation=True, padding=True, max_length=128)
     with torch.no_grad():
         outputs = model(**inputs)
     
-    probs = torch.nn.functional.softmax(outputs.logits, dim=1)
-    prediction = torch.argmax(probs).item()
-    confidence = torch.max(probs).item()
+    # Model Çıktıları: 0 -> Negative, 1 -> Neutral, 2 -> Positive
+    prediction = torch.argmax(outputs.logits, dim=1).item()
     
-    if confidence < 0.90: 
-        sentiment = "neutral"
-    else:
-        sentiment = "positive" if prediction == 1 else "negative"
+    mapping = {0: "negative", 1: "neutral", 2: "positive"}
+    sentiment = mapping[prediction]
         
     return {"sentiment": sentiment}
