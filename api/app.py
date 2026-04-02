@@ -39,12 +39,9 @@ def predict_sentiment(request: TextRequest):
     
     probs = torch.nn.functional.softmax(outputs.logits, dim=1)
     prediction = torch.argmax(probs).item()
-    
-    # Bu model 0: Negative, 1: Positive döner.
-    # Güven puanı (confidence) düşükse "Neutral" diyelim
     confidence = torch.max(probs).item()
     
-    if confidence < 0.7: # Eğer model emin değilse
+    if confidence < 0.90: 
         sentiment = "neutral"
     else:
         sentiment = "positive" if prediction == 1 else "negative"
